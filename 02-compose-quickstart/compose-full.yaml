@@ -1,0 +1,44 @@
+services:
+  # On peut utiliser un service dynamique pour le développement
+  # mais il est préférable d'utiliser un service statique pour la production
+  # (avec sa propre image, versionnée et testée)
+  # web-dynamic:
+  #   image: python:3.11-alpine
+  #   volumes:
+  #     - ./:/code
+  #   command: ["flask", "run", "--host=0.0.0.0"]
+  web:
+    build: .
+    ports:
+      - "${APP_PORT}:5000"
+    env_file:
+      - .env
+      # ./conf/...
+    environment:
+      - REDIS_HOST=${REDIS_HOST}
+      - REDIS_PORT=${REDIS_PORT}
+    depends_on:
+      redis:
+        condition: service_healthy
+    develop:
+      watch:
+        - action: sync+restart
+          path: ./app.py
+          target: /code/app.py
+          initial_sync: true
+        - action: rebuild
+          path: requirements.txt
+
+  redis:
+    image: redis:alpine
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
+
+volumes:
+  redis-data:

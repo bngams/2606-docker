@@ -1,0 +1,75 @@
+services:
+  web:
+    build: .
+    image: myapp:${APP_VERSION:-dev}          # tag explicite -> build reproductible / push possible
+    restart: unless-stopped
+    init: true                                 # PID 1 propre : signaux + reaping des zombies (avoid zombies processes)
+    ports:
+      - "127.0.0.1:${APP_PORT}:5000"           # n'expose pas sur 0.0.0.0 si c'est local
+    environment:
+      - REDIS_HOST=${REDIS_HOST}
+      - REDIS_PORT=${REDIS_PORT}
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - frontend
+      - backend
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test: ["CMD", "python", "-c",
+             "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://localhost:5000/').status==200 else 1)"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+      start_period: 15s
+    deploy:                                   # contraintes de ressources pour éviter la surconsommation sur le host ou OOM killer
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 512M
+        reservations:
+          memory: 128M
+    logging:                                  # contraintes de stockage pour éviter de saturer le disque du host éviter le "no space left on device"
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    develop:
+      watch:
+        - action: sync+restart
+          path: .
+          target: /code
+        - action: rebuild
+          path: requirements.txt
+
+  redis:
+    image: redis:7.4-alpine                    # version épinglée, pas de tag flottant
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes", "--save", "60", "1"]
+    volumes:
+      - redis-data:/data
+    networks:
+      - backend                                # redis seulement sur le réseau interne
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 256M
+
+networks:
+  frontend:
+  backend:
+    internal: true                             # backend coupé d'Internet, intra-conteneur OK
+
+volumes:
+  redis-data:
