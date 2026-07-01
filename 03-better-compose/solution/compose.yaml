@@ -1,0 +1,53 @@
+# Fichier principal : inclut l'infra puis décrit l'app web.
+include:
+  - infra.yaml
+
+services:
+  web:
+    build: .
+    image: myapp:${APP_VERSION:-dev}     # tag explicite → build reproductible / push possible
+    restart: unless-stopped
+    init: true                            # PID 1 propre (signaux + reaping des zombies)
+    ports:
+      - "127.0.0.1:${APP_PORT:-8000}:5000"  # lié à la loopback (pas exposé sur 0.0.0.0)
+    environment:
+      - REDIS_HOST=${REDIS_HOST:-redis}
+      - REDIS_PORT=${REDIS_PORT:-6379}
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - frontend                          # accès Internet (egress)
+      - backend                           # parle à redis
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test: ["CMD", "python", "-c",
+             "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://localhost:5000/').status==200 else 1)"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+      start_period: 15s
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 512M
+          pids: 200          # garde-fou anti fork-bomb
+        reservations:
+          memory: 128M
+    logging:
+      driver: json-file
+      options: { max-size: "10m", max-file: "3" }
+    develop:
+      watch:
+        - action: sync+restart
+          path: .
+          target: /code
+        - action: rebuild
+          path: requirements.txt
+
+networks:
+  frontend:                               # egress Internet + parle à web
+  backend:
+    internal: true                        # coupé d'Internet ; intra-conteneur OK

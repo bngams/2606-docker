@@ -1,0 +1,6 @@
+.env
+secrets/redis_password.txt
+*.pyc
+__pycache__/
+redis-data/
+.DS_Store

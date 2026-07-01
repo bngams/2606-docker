@@ -1,0 +1,31 @@
+# Infra du projet : Redis (durci). Inclus par compose.yaml via `include:`.
+services:
+  redis:
+    image: redis:7.4-alpine            # version ÉPINGLÉE (idéalement par digest @sha256:… en prod)
+    hostname: redis
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes", "--save", "60", "1"]  # persistance explicite
+    volumes:
+      - redis-data:/data
+    networks:
+      - backend                        # UNIQUEMENT le réseau interne (pas d'accès Internet)
+    security_opt:
+      - no-new-privileges:true         # bloque l'escalade via binaires setuid
+    init: true
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
+    deploy:
+      resources:
+        limits:                        # limites honorées par `docker compose up` (Compose v2)
+          cpus: "0.5"
+          memory: 256M
+    logging:
+      driver: json-file
+      options: { max-size: "10m", max-file: "3" }
+
+volumes:
+  redis-data:

@@ -1,0 +1,48 @@
+# Override PROD : durcissement maximal. À combiner avec compose.yaml :
+#   docker compose -f compose.yaml -f compose.prod.yaml up -d
+#
+# /!\ DEUX PIÈGES (cf. README) :
+#   - read_only + tmpfs sur web : casse le sync de develop.watch (rootfs en lecture seule)
+#     → réservé à la PROD (plus de watch ici).
+#   - cap_drop:[ALL] + command custom sur redis : le `command:` court-circuite l'entrypoint,
+#     donc plus de `gosu redis` : le process tournerait en ROOT, et sans DAC_OVERRIDE root ne
+#     peut PAS écrire dans /data (possédé par l'uid 999 `redis`). Solution propre : `user: redis`
+#     → on tourne directement comme le propriétaire de /data, aucun cap_add nécessaire.
+
+services:
+  web:
+    read_only: true                 # rootfs en lecture seule (durcissement)
+    tmpfs:
+      - /tmp                         # zone inscriptible minimale
+    develop: !reset null            # plus de watch en prod (incompatible read_only)
+    secrets:                        # l'app a besoin du mot de passe pour s'authentifier sur redis
+      - redis_password              # -> /run/secrets/redis_password (lu par app.py)
+
+  redis:
+    user: redis                     # tourne comme l'uid propriétaire de /data (pas root)
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop:
+      - ALL                         # aucun cap_add : `user: redis` suffit (pas de gosu à faire)
+    # mot de passe via SECRET (fichier monté), pas une variable d'env
+    # Redis n'a pas de "--requirepass-file" → on lit le secret via un shell.
+    # (le $$ échappe le $ pour Compose ; le secret est monté en /run/secrets/redis_password)
+    command:
+      - sh
+      - -c
+      - 'redis-server --appendonly yes --save 60 1 --requirepass "$$(cat /run/secrets/redis_password)"'
+    # le healthcheck du base infra.yaml (redis-cli ping) reçoit NOAUTH une fois le mot de passe
+    # actif → on le remplace ici par un ping AUTHENTIFIÉ.
+    healthcheck:
+      test: ["CMD-SHELL", 'redis-cli -a "$$(cat /run/secrets/redis_password)" ping | grep -q PONG']
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
+    secrets:
+      - redis_password
+
+secrets:
+  redis_password:
+    file: ./secrets/redis_password.txt   # fichier réel (gitignoré) ; .sample fourni

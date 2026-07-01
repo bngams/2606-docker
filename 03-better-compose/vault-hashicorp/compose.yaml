@@ -1,0 +1,17 @@
+# HashiCorp Vault en MODE DEV (jouet pédagogique — NE PAS utiliser en prod).
+# Démarre un Vault déverrouillé, en mémoire, avec un token root fixe.
+#   cp .env.example .env
+#   docker compose up -d
+#   UI  : http://localhost:8200   (token: cf .env)
+services:
+  vault:
+    image: hashicorp/vault:1.18
+    container_name: vault-dev
+    cap_add:
+      - IPC_LOCK
+    environment:
+      VAULT_DEV_ROOT_TOKEN_ID: ${VAULT_DEV_ROOT_TOKEN_ID:-root}   # token root (DEV) — depuis .env
+      VAULT_DEV_LISTEN_ADDRESS: 0.0.0.0:8200
+    ports:
+      - "8200:8200"
+    command: ["vault", "server", "-dev"]
