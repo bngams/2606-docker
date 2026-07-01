@@ -47,7 +47,16 @@ services:
         - action: rebuild
           path: requirements.txt
 
+secrets:
+  my_redis_password: # /run/secrets/my_redis_password
+    file: ./secrets/redis_password.txt
+
 networks:
-  frontend:                               # egress Internet + parle à web
-  backend:
-    internal: true                        # coupé d'Internet ; intra-conteneur OK
+  # egress Internet + parle à web
+  frontend: 
+  # backend network declared in infra.yaml (redis only) 
+  # dont need to re declare it here, as it's included via infra.yaml (line 3)
+  # web can talk to redis via this network
+  # backend:
+    # name: backend
+    # external: true                        # coupé d'Internet ; intra-conteneur OK

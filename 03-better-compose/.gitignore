@@ -1,5 +1,6 @@
 .env
 secrets/redis_password.txt
+cosign.key
 *.pyc
 __pycache__/
 redis-data/

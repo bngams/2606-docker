@@ -1,0 +1,42 @@
+# Registre local AVEC interface web (option B du §10 BONUS).
+# = registry:2 (le vrai registre OCI) + joxit/docker-registry-ui (une UI pour VOIR
+#   images / tags / digests / signatures cosign). 2 conteneurs seulement, démarrage ~3s.
+#
+#   docker compose up -d
+#   UI       : http://localhost:8085
+#   push/pull: 127.0.0.1:5000   (ex: docker push 127.0.0.1:5000/myapp:dev)
+services:
+
+  registry:
+    image: registry:2
+    restart: unless-stopped
+    environment:
+      # CORS : autoriser l'UI (servie sur :8085) à interroger l'API du registre
+      REGISTRY_HTTP_HEADERS_Access-Control-Allow-Origin: '[http://localhost:8085]'
+      REGISTRY_HTTP_HEADERS_Access-Control-Allow-Methods: '[HEAD,GET,OPTIONS,DELETE]'
+      REGISTRY_HTTP_HEADERS_Access-Control-Allow-Credentials: '[true]'
+      REGISTRY_HTTP_HEADERS_Access-Control-Allow-Headers: '[Authorization,Accept,Cache-Control]'
+      REGISTRY_HTTP_HEADERS_Access-Control-Expose-Headers: '[Docker-Content-Digest]'
+      # autoriser la suppression d'images (pratique en lab)
+      REGISTRY_STORAGE_DELETE_ENABLED: "true"
+    ports:
+      - "127.0.0.1:5000:5000"       # endpoint push/pull (loopback)
+    volumes:
+      - registry-data:/var/lib/registry
+
+  ui:
+    image: joxit/docker-registry-ui:2.5.7
+    restart: unless-stopped
+    environment:
+      SINGLE_REGISTRY: "true"
+      REGISTRY_TITLE: "Lab 03 — Registry"
+      NGINX_PROXY_PASS_URL: "http://registry:5000"
+      DELETE_IMAGES: "true"
+      SHOW_CONTENT_DIGEST: "true"    # affiche le digest sha256 (utile pour la signature cosign)
+    ports:
+      - "127.0.0.1:8085:80"
+    depends_on:
+      - registry
+
+volumes:
+  registry-data:

@@ -36,6 +36,8 @@ Pour suivre ce guide, on vous fournit en plus (déjà dans le dossier) :
 03-better-compose/
 ├── secrets/redis_password.txt.sample   # gabarit de secret (§6)
 ├── vault-hashicorp/compose.yaml        # un Vault prêt à démarrer (§8)
+├── registry-ui/compose.yaml            # registre local + UI (BONUS §10)
+├── BONUS.md                            # SAST + scan + signature (supply chain)
 └── solution/                           # la correction (en dernier recours)
 ```
 
@@ -52,6 +54,8 @@ Voici l'arborescence finale attendue :
 │   ├── redis_password.txt.sample
 │   └── redis_password.txt          # créé en §6 (gitignoré)
 ├── vault-hashicorp/compose.yaml    # HashiCorp Vault (§8)
+├── registry-ui/compose.yaml        # registre local + UI (BONUS §10)
+├── BONUS.md                        # supply chain : SAST, scan, signature
 └── solution/                       # la correction
 ```
 
@@ -622,6 +626,16 @@ rm -f secrets/redis_password.txt        # ne pas laisser traîner le clair
 
 ---
 
+## 🧰 §9 — Pour aller plus loin : sécuriser la *supply chain* (BONUS)
+
+La stack est durcie **à l'exécution**. On peut aussi sécuriser l'**image elle-même** : l'analyser
+(SAST : config, secrets, vulnérabilités), la scanner, et la **signer** (Cosign / Sigstore).
+
+👉 Tout ça est dans un fichier dédié : **[BONUS.md](BONUS.md)** — l'ordre suivi est celui d'un vrai
+pipeline : **SAST (Trivy) → build → scan de l'image → signature (Cosign)**.
+
+---
+
 ## 🎉 Récap final
 
 - [ ] Stack durcie : réseaux segmentés, ressources limitées, non-root, healthchecks.
@@ -630,9 +644,11 @@ rm -f secrets/redis_password.txt        # ne pas laisser traîner le clair
 - [ ] Secret Redis via **Compose `secrets:`** (plus de mot de passe en clair dans la conf).
 - [ ] Secret **chiffré avec Ansible Vault** (commit chiffré), puis déchiffré pour déployer.
 - [ ] Secret **servi par HashiCorp Vault** local.
+- [ ] (**[BONUS.md](BONUS.md)**) Image **analysée** (Trivy) et **signée** (Cosign).
 
 ## ✅ Bonus
 
+- Aller plus loin : **[BONUS.md](BONUS.md)** — SAST (Trivy), scan de l'image, signature (Cosign).
 - Épingler Redis par **digest** (`redis:7.4-alpine@sha256:…`).
 - **Portainer** pour visualiser les conteneurs ; **Adminer** pour une éventuelle DB.
 - Un `Makefile` (ou des alias) pour les commandes `up`/`down`/`prod`.
