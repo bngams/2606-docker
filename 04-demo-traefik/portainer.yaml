@@ -1,0 +1,39 @@
+name: my_portainer
+
+services:
+  portainer-ce:
+    image: portainer/portainer-ce:lts
+    container_name: portainer
+    restart: always
+    labels:
+      - "traefik.enable=true"
+      #- "traefik.http.routers.portainer.rule=PathPrefix(`/portainer`)"
+      # - "traefik.http.middlewares.portainer-stripprefix.stripprefix.prefixes=/portainer"
+      # - "traefik.http.routers.portainer.middlewares=portainer-stripprefix"
+      - "traefik.http.routers.portainer.rule=Host(`portainer.local`)"
+      - "traefik.http.routers.portainer.entrypoints=web"
+      - "traefik.http.services.portainer.loadbalancer.server.port=9000"
+      # secure-ipallowlist defined in traefik.yaml or traefik labels
+      # - "traefik.http.middlewares.portainer-auth.basicauth.users=admin:$$apr1$$rqtxf9au$$HVX4I4oJnNtLwWVBF/To3.,test:$$apr1$$H6uskkkW$$IgXLP6ewTrSuBkTrqE8wj/"
+      # use our middlewares for the router
+      # - "traefik.http.routers.portainer.middlewares=secure-ipallowlist,portainer-auth"
+
+      
+    ports:
+      - 9000:9000
+      - 9443:9443
+    networks:
+      - public_net
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - portainer_data:/data
+
+networks:
+  public_net:
+    name: public_net
+    external: true
+
+volumes:
+  portainer_data:
+    external: false
+    name: portainer_data

@@ -11,7 +11,9 @@ services:
       - "--providers.docker=true"
       # define entrypoint for web traffic
       - "--entrypoints.web.address=:80"
-    # traefik --api.insecure=true --providers.docker=true --entrypoints.web.address=:80
+      # traefik --api.insecure=true --providers.docker=true --entrypoints.web.address=:80
+      # global middlewares
+      # - "traefik.http.middlewares.secure-ipallowlist.ipallowlist.sourcerange=127.0.0.1/32, 92.88.170.59/32"
     ports:
       - "80:80"
       - "8000:8080"
