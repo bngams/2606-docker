@@ -130,7 +130,8 @@ contient déjà l'app :
 **Important — Swarm ne *build* pas** : chaque nœud doit **pull** une image déjà construite. On
 **build puis on pousse** l'image sur un registre ; `compose.yml` la référence via `${WEB_IMAGE}`.
 
-🚧 **À faire** — définir l'image, build + push (mettez **votre** compte Docker Hub / registre) :
+**À faire** — définir l'image, build + push (mettez **votre** compte Docker Hub / registre) :
+** 🚧  => vous pouvez utiliser l'image https://hub.docker.com/r/bngams/stackdemo déjà prête **
 
 ```bash
 cp .env.example .env             # puis éditez WEB_IMAGE=votre-user/stackdemo:1.0
