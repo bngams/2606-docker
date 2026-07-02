@@ -1,0 +1,22 @@
+# App2 — traefik/whoami : un mini service qui renvoie les en-têtes HTTP reçus
+# (parfait pour VOIR ce que le reverse proxy transmet). Aucune image à builder.
+services:
+  app2:
+    image: traefik/whoami
+    restart: unless-stopped
+    networks:
+      - edge
+    security_opt:
+      - no-new-privileges:true
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.app2.rule=PathPrefix(`/app2`)
+      - traefik.http.routers.app2.middlewares=app2-strip
+      - traefik.http.middlewares.app2-strip.stripprefix.prefixes=/app2
+      - traefik.http.services.app2.loadbalancer.server.port=80         # whoami écoute sur 80
+      - traefik.docker.network=edge
+
+networks:
+  edge:
+    name: edge
+    external: true

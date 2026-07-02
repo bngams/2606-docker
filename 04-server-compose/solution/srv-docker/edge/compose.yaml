@@ -1,0 +1,26 @@
+# EDGE — le reverse proxy du serveur (Traefik). C'est LUI qui possède le port 80.
+# Les projets (app1, app2) s'y branchent via le réseau partagé "edge" + des labels.
+# (Pas de TLS ici : on se concentre sur le routage. Le HTTPS/Let's Encrypt viendra plus tard.)
+services:
+  traefik:
+    image: traefik:v3.1
+    restart: unless-stopped
+    command:
+      - --providers.docker=true
+      - --providers.docker.exposedbydefault=false   # un service n'est exposé que s'il a les labels
+      - --entrypoints.web.address=:80                # un seul point d'entrée : HTTP sur 80
+      - --api.dashboard=true                         # tableau de bord Traefik
+      - --api.insecure=true                          # dashboard en clair sur :8080 (DEV uniquement !)
+    ports:
+      - "80:80"                                       # trafic des apps
+      - "127.0.0.1:8080:8080"                         # dashboard Traefik (loopback)
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro  # découverte des conteneurs (lecture seule)
+    networks:
+      - edge
+    security_opt:
+      - no-new-privileges:true
+
+networks:
+  edge:
+    name: edge          # réseau PARTAGÉ, créé ICI, rejoint par les projets (external: true)

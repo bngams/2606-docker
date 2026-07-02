@@ -1,0 +1,24 @@
+# App1 — site statique nginx, routé par l'edge Traefik sur /app1.
+# Projet Compose INDÉPENDANT (son propre up/down). Il rejoint le réseau partagé "edge".
+services:
+  app1:
+    build: .
+    image: app1:local
+    restart: unless-stopped
+    networks:
+      - edge                       # rejoint le réseau de l'edge (Traefik)
+    security_opt:
+      - no-new-privileges:true
+    labels:
+      - traefik.enable=true                                             # opt-in
+      - traefik.http.routers.app1.rule=PathPrefix(`/app1`)              # route /app1
+      # /app1/xyz -> /xyz côté app (on retire le préfixe avant de transmettre)
+      - traefik.http.routers.app1.middlewares=app1-strip
+      - traefik.http.middlewares.app1-strip.stripprefix.prefixes=/app1
+      - traefik.http.services.app1.loadbalancer.server.port=80         # port interne du conteneur
+      - traefik.docker.network=edge                                    # réseau à utiliser par Traefik
+
+networks:
+  edge:
+    name: edge
+    external: true                 # créé par le projet edge/
