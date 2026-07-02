@@ -1,0 +1,29 @@
+services:
+  traefik:
+    image: traefik:v3.7
+    # ENTRYPOINT [traefik] is already defined in the image, so we can use command to override the default arguments
+    command:
+      # dev mode (no password, dashboard enabled, auto config from docker)
+      - "--api.insecure=true"
+      # only watch "traefik.enable=true"    
+      - "--providers.docker.exposedbydefault=false"
+      # enable docker provider (listen to docker events and auto update config)
+      - "--providers.docker=true"
+      # define entrypoint for web traffic
+      - "--entrypoints.web.address=:80"
+    # traefik --api.insecure=true --providers.docker=true --entrypoints.web.address=:80
+    ports:
+      - "80:80"
+      - "8000:8080"
+    volumes:
+      # command vs file config 
+      # - ./traefik.yml:/traefik.yml:ro
+      # docker socket => traefik can listen to docker events and automatically update its configuration
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - public_net
+
+networks:
+  public_net:
+    name: public_net
+    external: false

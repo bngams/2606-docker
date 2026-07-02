@@ -1,0 +1,25 @@
+services:
+  whoami2:
+    container_name: whoami-app2
+    image: traefik/whoami
+    labels:
+      # traefik labels to define the routing rule for this service
+      # traefik.* labels are used by Traefik to configure routing and other settings for the service
+      - "traefik.enable=true"
+      - "traefik.http.routers.whoami2.rule=PathPrefix(`/whoami2`)"
+      # strip prefix /whoami2 from the request before forwarding it to the service
+      - "traefik.http.routers.whoami2.middlewares=strip-whoami2"
+      - "traefik.http.middlewares.strip-whoami2.stripprefix.prefixes=/whoami2"
+      # specify network for the service to connect to Traefik
+      - "traefik.docker.network=public_net"
+    networks:
+      - public_net
+      - whoami2_net
+
+networks:
+  whoami2_net:
+    name: whoami2_net
+    external: false
+  public_net:
+    name: public_net
+    external: true # use the existing public_net network created by traefik
