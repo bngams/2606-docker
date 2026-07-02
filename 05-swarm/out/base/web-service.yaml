@@ -1,0 +1,21 @@
+# check if there is at least one published port
+
+#! web-service.yaml
+# Generated code, do not edit
+apiVersion: v1
+kind: Service
+metadata:
+    name: web-published
+    namespace: 05-swarm
+    labels:
+        com.docker.compose.project: 05-swarm
+        com.docker.compose.service: web
+spec:
+    selector:
+        com.docker.compose.project: 05-swarm
+        com.docker.compose.service: web
+    ports:
+        - name: web-8000
+          port: 8000
+          protocol: TCP
+          targetPort: web-8000

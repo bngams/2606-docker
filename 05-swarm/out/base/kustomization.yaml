@@ -1,0 +1,12 @@
+#! kustomization.yaml
+# Generated code, do not edit
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+    - 0-05-swarm-namespace.yaml
+    - default-network-policy.yaml
+    - redis-deployment.yaml
+    - redis-expose.yaml
+    - web-deployment.yaml
+    - web-expose.yaml
+    - web-service.yaml

@@ -1,0 +1,32 @@
+#! web-deployment.yaml
+# Generated code, do not edit
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+    name: web
+    namespace: 05-swarm
+    labels:
+        com.docker.compose.project: 05-swarm
+        com.docker.compose.service: web
+spec:
+    replicas: 1
+    selector:
+        matchLabels:
+            com.docker.compose.project: 05-swarm
+            com.docker.compose.service: web
+    strategy:
+        type: Recreate
+    template:
+        metadata:
+            labels:
+                com.docker.compose.project: 05-swarm
+                com.docker.compose.service: web
+                com.docker.compose.network.default: "true"
+        spec:
+            containers:
+                - name: web
+                  image: bngams/stackdemo
+                  imagePullPolicy: IfNotPresent
+                  ports:
+                    - name: web-8000
+                      containerPort: 8000

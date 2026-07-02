@@ -1,0 +1,32 @@
+# compose.yml — UN SEUL fichier pour les deux usages (spec Compose unifiée).
+#
+#   DEV (un hôte)   : docker compose up --build          -> lit `build:`, ignore `deploy.replicas`
+#   SWARM (cluster) : docker stack deploy -c compose.yml demo  -> lit `deploy:`, ignore `build:`
+#
+# En Swarm, `build:` est ignoré ("Ignoring unsupported options: build", c'est normal) : Swarm ne
+# construit pas, il PULL l'image `image:` — donc buildez et poussez l'image d'abord.
+#   cp .env.example .env   # définir WEB_IMAGE
+services:
+  web:
+    build: .                                 # utilisé par `docker compose up` (dev) ; ignoré en Swarm
+    image: ${WEB_IMAGE:-bngams/stackdemo}    # utilisé par Swarm (image déjà poussée)
+    ports:
+      - "8000:8000"
+    depends_on:
+      - redis
+    deploy:                                  # lu UNIQUEMENT par Swarm (docker stack deploy)
+      replicas: 3                            # 3 instances de web réparties sur les nœuds
+      update_config:
+        parallelism: 1                       # rolling update : 1 tâche à la fois
+        delay: 5s
+        order: start-first                   # démarre la nouvelle avant d'arrêter l'ancienne
+      restart_policy:
+        condition: on-failure
+
+  redis:
+    image: redis:alpine
+    deploy:
+      replicas: 1                            # une seule instance (état partagé)
+      placement:
+        constraints:
+          - node.role == manager             # épingle redis sur le manager (simplifie le stockage)
