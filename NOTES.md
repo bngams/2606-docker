@@ -4,6 +4,9 @@ https://codeshare.io/G8jlre
 # Tableau blanc
 https://excalidraw.com/#room=fcc25acbd3c46ba0f2c3,G-WviMZBbnhZym2jDuYS_w
 
+# Dépôt final
+https://github.com/bngams/2606-docker
+
 # Documentation 
 sur les fondations de containers 
 https://github.com/bngams/2512-docker/tree/main/docs
@@ -36,6 +39,10 @@ https://github.com/bngams/2606-docker/blob/main/03-better-compose/BONUS.md
 
 # Workflow / lifecycle docker et securité
 https://medium.com/@kubeastronaut/docker-security-best-practices-57f3a33f06eb
+
+# Logs & Metrics
+Un peu d'inspiration sur ce sujet de centralisation des logs & metrics pour nos containers:
+https://github.com/bngams/docker-obs-intro/tree/main
 
 # Server and container hosting
 https://dokploy.com/
